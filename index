@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Grocery List</title>
+
+    <meta name="description" content="Smart grocery list powered by AI">
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🛒%3C/text%3E%3C/svg%3E">
+
+    <style>
+
+        * {
+
+            margin: 0;
+
+            padding: 0;
+
+            box-sizing: border-box;
+
+        }
+
+        
+
+        body {
+
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+            min-height: 100vh;
+
+            padding: 20px;
+
+        }
+
+        
+
+        .container {
+
+            max-width: 600px;
+
+            margin: 0 auto;
+
+            background: rgba(255, 255, 255, 0.95);
+
+            border-radius: 20px;
+
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+
+            padding: 30px;
+
+            backdrop-filter: blur(10px);
+
+        }
+
+        
+
+        h1 {
+
+            color: #4a5568;
+
+            margin-bottom: 10px;
+
+            font-size: 32px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+        }
+
+        
+
+        .subtitle {
+
+            color: #718096;
+
+            margin-bottom: 30px;
+
+            font-size: 14px;
+
+        }
+
+        
+
+        .input-group {
+
+            position: relative;
+
+            margin-bottom: 20px;
+
+        }
+
+        
+
+        textarea {
+
+            width: 100%;
+
+            padding: 15px;
+
+            border: 2px solid #e2e8f0;
+
+            border-radius: 12px;
+
+            font-size: 16px;
+
+            resize: vertical;
+
+            min-height: 80px;
+
+            font-family: inherit;
+
+            transition: border-color 0.3s;
+
+        }
+
+        
+
+        textarea:focus {
+
+            outline: none;
+
+            border-color: #667eea;
+
+        }
+
+        
+
+        .btn {
+
+            width: 100%;
+
+            padding: 15px;
+
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+            color: white;
+
+            border: none;
+
+            border-radius: 12px;
+
+            font-size: 18px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: transform 0.2s, box-shadow 0.2s;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+        }
+
+        
+
+        .btn:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+
+        }
+
+        
+
+        .btn:disabled {
+
+            background: #cbd5e0;
+
+            cursor: not-allowed;
+
+            transform: none;
+
+        }
+
+        
+
+        .loading {
+
+            display: none;
+
+            text-align: center;
+
+            color: #718096;
+
+            margin: 20px 0;
+
+        }
+
+        
+
+        .spinner {
+
+            display: inline-block;
+
+            width: 20px;
+
+            height: 20px;
+
+            border: 3px solid #e2e8f0;
+
+            border-top-color: #667eea;
+
+            border-radius: 50%;
+
+            animation: spin 1s linear infinite;
+
+        }
+
+        
+
+        @keyframes spin {
+
+            to { transform: rotate(360deg); }
+
+        }
+
+        
+
+        .items-section {
+
+            margin-top: 30px;
+
+        }
+
+        
+
+        .items-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 15px;
+
+        }
+
+        
+
+        h2 {
+
+            color: #4a5568;
+
+            font-size: 22px;
+
+        }
+
+        
+
+        .copy-btn {
+
+            padding: 8px 16px;
+
+            background: #48bb78;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+
+            cursor: pointer;
+
+            transition: background 0.3s;
+
+        }
+
+        
+
+        .copy-btn:hover {
+
+            background: #38a169;
+
+        }
+
+        
+
+        .copy-btn:disabled {
+
+            background: #cbd5e0;
+
+            cursor: not-allowed;
+
+        }
+
+        
+
+        .items-list {
+
+            background: #f7fafc;
+
+            border-radius: 12px;
+
+            padding: 15px;
+
+            min-height: 100px;
+
+        }
+
+        
+
+        .empty-state {
+
+            text-align: center;
+
+            color: #a0aec0;
+
+            padding: 30px;
+
+        }
+
+        
+
+        .item {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            padding: 12px 15px;
+
+            margin-bottom: 8px;
+
+            background: white;
+
+            border-radius: 8px;
+
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+            transition: transform 0.2s;
+
+        }
+
+        
+
+        .item:hover {
+
+            transform: translateX(5px);
+
+        }
+
+        
+
+        .item-text {
+
+            color: #2d3748;
+
+            font-size: 16px;
+
+        }
+
+        
+
+        .delete-btn {
+
+            background: none;
+
+            border: none;
+
+            color: #e53e3e;
+
+            cursor: pointer;
+
+            font-size: 20px;
+
+            padding: 0 5px;
+
+            transition: color 0.3s;
+
+        }
+
+        
+
+        .delete-btn:hover {
+
+            color: #c53030;
+
+        }
+
+        
+
+        .examples {
+
+            background: #edf2f7;
+
+            border-radius: 12px;
+
+            padding: 20px;
+
+            margin-top: 30px;
+
+        }
+
+        
+
+        .examples h3 {
+
+            color: #4a5568;
+
+            margin-bottom: 12px;
+
+            font-size: 18px;
+
+        }
+
+        
+
+        .examples ul {
+
+            list-style: none;
+
+            color: #718096;
+
+            font-size: 14px;
+
+        }
+
+        
+
+        .examples li {
+
+            margin-bottom: 8px;
+
+            padding-left: 20px;
+
+            position: relative;
+
+        }
+
+        
+
+        .examples li:before {
+
+            content: "✨";
+
+            position: absolute;
+
+            left: 0;
+
+        }
+
+        
+
+        .status {
+
+            position: fixed;
+
+            bottom: 20px;
+
+            right: 20px;
+
+            padding: 15px 25px;
+
+            background: #48bb78;
+
+            color: white;
+
+            border-radius: 50px;
+
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+            transform: translateY(100px);
+
+            transition: transform 0.3s;
+
+            font-weight: 500;
+
+        }
+
+        
+
+        .status.show {
+
+            transform: translateY(0);
+
+        }
+
+        
+
+        .status.error {
+
+            background: #e53e3e;
+
+        }
+
+        
+
+        .powered-by {
+
+            text-align: center;
+
+            margin-top: 20px;
+
+            color: #a0aec0;
+
+            font-size: 12px;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>
+
+            <span>🛒</span>
+
+            AI Grocery List
+
+        </h1>
+
+        <p class="subtitle">Tell me what you need in natural language!</p>
+
+        
+
+        <div class="input-group">
+
+            <textarea 
+
+                id="input" 
+
+                placeholder="Try: 'We need milk, eggs, and ingredients for spaghetti dinner' or 'I want to make tacos tonight'"
+
+                rows="3"
+
+            ></textarea>
+
+        </div>
+
+        
+
+        <button class="btn" id="addBtn" onclick="processInput()">
+
+            <span>✨</span>
+
+            Add to List
+
+        </button>
+
+        
+
+        <div class="loading" id="loading">
+
+            <div class="spinner"></div>
+
+            <p>AI is thinking...</p>
+
+        </div>
+
+        
+
+        <div class="items-section">
+
+            <div class="items-header">
+
+                <h2>Your Grocery List</h2>
+
+                <button class="copy-btn" onclick="copyList()" id="copyBtn" disabled>
+
+                    📋 Copy List
+
+                </button>
+
+            </div>
+
+            <div class="items-list" id="itemsList">
+
+                <p class="empty-state">No items yet. Tell me what you need above!</p>
+
+            </div>
+
+        </div>
+
+        
+
+        <div class="examples">
+
+            <h3>💡 Example phrases:</h3>
+
+            <ul>
+
+                <li>"We need milk, eggs, and bread"</li>
+
+                <li>"Ingredients for chicken stir fry"</li>
+
+                <li>"Get stuff for breakfast tomorrow"</li>
+
+                <li>"We're out of coffee, sugar, and creamer"</li>
+
+                <li>"I want to make chocolate chip cookies"</li>
+
+                <li>"Stock up on cleaning supplies"</li>
+
+            </ul>
+
+        </div>
+
+        
+
+        <p class="powered-by">Powered by Claude AI • Shared with ❤️</p>
+
+    </div>
+
+    
+
+    <div id="status" class="status"></div>
+
+    
+
+    <script>
+
+        let groceryItems = [];
+
+        const API_URL = '/api/grocery'; // Will work when deployed to Vercel
+
+        
+
+        // Load saved items
+
+        function loadItems() {
+
+            const saved = localStorage.getItem('groceryItems');
+
+            if (saved) {
+
+                groceryItems = JSON.parse(saved);
+
+                renderList();
+
+            }
+
+        }
+
+        
+
+        // Save items
+
+        function saveItems() {
+
+            localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+
+        }
+
+        
+
+        async function processInput() {
+
+            const input = document.getElementById('input').value.trim();
+
+            if (!input) return;
+
+            
+
+            const btn = document.getElementById('addBtn');
+
+            const loading = document.getElementById('loading');
+
+            
+
+            btn.disabled = true;
+
+            loading.style.display = 'block';
+
+            
+
+            try {
+
+                const response = await fetch(API_URL, {
+
+                    method: 'POST',
+
+                    headers: {
+
+                        'Content-Type': 'application/json',
+
+                    },
+
+                    body: JSON.stringify({ input })
+
+                });
+
+                
+
+                const data = await response.json();
+
+                
+
+                if (data.items && data.items.length > 0) {
+
+                    groceryItems = [...groceryItems, ...data.items];
+
+                    saveItems();
+
+                    renderList();
+
+                    document.getElementById('input').value = '';
+
+                    showStatus(`Added ${data.items.length} items! ${data.fallback ? '(Simple mode)' : '(AI mode)'}`);
+
+                } else {
+
+                    showStatus('No items found. Try being more specific.', true);
+
+                }
+
+            } catch (error) {
+
+                console.error('Error:', error);
+
+                // Fallback to simple parsing
+
+                const items = input.split(/[,;]/)
+
+                    .map(item => item.trim())
+
+                    .filter(item => item.length > 0);
+
+                
+
+                if (items.length > 0) {
+
+                    groceryItems = [...groceryItems, ...items];
+
+                    saveItems();
+
+                    renderList();
+
+                    document.getElementById('input').value = '';
+
+                    showStatus(`Added ${items.length} items! (Offline mode)`);
+
+                }
+
+            } finally {
+
+                btn.disabled = false;
+
+                loading.style.display = 'none';
+
+            }
+
+        }
+
+        
+
+        function renderList() {
+
+            const container = document.getElementById('itemsList');
+
+            const copyBtn = document.getElementById('copyBtn');
+
+            
+
+            if (groceryItems.length === 0) {
+
+                container.innerHTML = '<p class="empty-state">No items yet. Tell me what you need above!</p>';
+
+                copyBtn.disabled = true;
+
+            } else {
+
+                container.innerHTML = groceryItems.map((item, index) => `
+
+                    <div class="item">
+
+                        <span class="item-text">${item}</span>
+
+                        <button class="delete-btn" onclick="removeItem(${index})">✕</button>
+
+                    </div>
+
+                `).join('');
+
+                copyBtn.disabled = false;
+
+            }
+
+        }
+
+        
+
+        function removeItem(index) {
+
+            groceryItems.splice(index, 1);
+
+            saveItems();
+
+            renderList();
+
+        }
+
+        
+
+        async function copyList() {
+
+            const itemsList = groceryItems.map(item => `- ${item}`).join('\n');
+
+            const fullList = `🛒 Grocery List\n${new Date().toLocaleString()}\n\n${itemsList}`;
+
+            
+
+            try {
+
+                await navigator.clipboard.writeText(fullList);
+
+                showStatus('Copied to clipboard!');
+
+            } catch (err) {
+
+                const textArea = document.createElement('textarea');
+
+                textArea.value = fullList;
+
+                document.body.appendChild(textArea);
+
+                textArea.select();
+
+                document.execCommand('copy');
+
+                document.body.removeChild(textArea);
+
+                showStatus('Copied to clipboard!');
+
+            }
+
+        }
+
+        
+
+        function showStatus(message, isError = false) {
+
+            const status = document.getElementById('status');
+
+            status.textContent = message;
+
+            status.className = `status show ${isError ? 'error' : ''}`;
+
+            
+
+            setTimeout(() => {
+
+                status.classList.remove('show');
+
+            }, 3000);
+
+        }
+
+        
+
+        // Enter key support
+
+        document.getElementById('input').addEventListener('keypress', function(e) {
+
+            if (e.key === 'Enter' && !e.shiftKey) {
+
+                e.preventDefault();
+
+                processInput();
+
+            }
+
+        });
+
+        
+
+        // Load on start
+
+        loadItems();
+
+    </script>
+
+</body>
+
+</html>
