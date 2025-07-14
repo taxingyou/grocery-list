@@ -1,0 +1,15 @@
+{
+  "name": "ai-grocery-list",
+  "version": "1.0.0",
+  "description": "AI-powered grocery list with Claude",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
