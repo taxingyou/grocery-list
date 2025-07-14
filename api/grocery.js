@@ -1,14 +1,4 @@
-// api/grocery.js - Vercel Serverless Function
-// Using CommonJS syntax for better compatibility
-
-const Anthropic = require('@anthropic-ai/sdk');
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-module.exports = async function handler(req, res) {
-  // Enable CORS
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -23,46 +13,18 @@ module.exports = async function handler(req, res) {
 
   try {
     const { input } = req.body;
-
     if (!input) {
       return res.status(400).json({ error: 'No input provided' });
     }
 
-    // Call Claude API
-    const message = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 300,
-      temperature: 0,
-      system: `You are a helpful grocery list assistant. Extract grocery items from natural language input. Include quantities when mentioned. Be smart about understanding context - if someone says "ingredients for tacos", list common taco ingredients like ground beef, tortillas, cheese, lettuce, tomatoes, salsa. If they mention a recipe or meal, extract all the likely ingredients. Respond ONLY with a JSON object containing an array of items.`,
-      messages: [
-        {
-          role: 'user',
-          content: `Extract grocery items from this text and respond with ONLY a JSON object in this format: {"items": ["item 1", "item 2"]}
-
-Examples:
-- "I need milk and eggs" -> {"items": ["milk", "eggs"]}
-- "ingredients for spaghetti" -> {"items": ["spaghetti pasta", "tomato sauce", "ground beef", "onion", "garlic", "parmesan cheese"]}
-- "stuff for breakfast" -> {"items": ["eggs", "bread", "butter", "orange juice", "cereal", "milk"]}
-- "7 days of dinners and kids snacks" -> {"items": ["ground beef", "taco shells", "cheese", "lettuce", "chicken breasts", "rice", "pasta", "pasta sauce", "hamburger buns", "bread", "soup", "eggs", "bacon", "apples", "bananas", "yogurt", "crackers", "string cheese"]}
-
-Text: "${input}"`
-        }
-      ]
-    });
-
-    // Parse the response
-    const responseText = message.content[0].text;
-    const parsed = JSON.parse(responseText);
-
-    res.status(200).json(parsed);
-  } catch (error) {
-    console.error('Error:', error);
-    
-    // Fallback to simple parsing if API fails
+    // Simple parsing for now
     const items = input.split(/[,;]/)
       .map(item => item.trim())
       .filter(item => item.length > 0);
     
     res.status(200).json({ items, fallback: true });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
   }
-};
+}
